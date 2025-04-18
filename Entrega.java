@@ -1,3 +1,4 @@
+
 import java.lang.AssertionError;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,13 +51,15 @@ import java.util.stream.IntStream;
  * de texte estigui configurat amb codificació UTF-8.
  */
 class Entrega {
-  static final String[] NOMS = {};
 
-  /*
-   * Aquí teniu els exercicis del Tema 1 (Lògica).
-   */
-  static class Tema1 {
+    static final String[] NOMS = {"MANUEL MAYA CONDE", "ZHIJUN LIN"};
+
     /*
+   * Aquí teniu els exercicis del Tema 1 (Lògica).
+     */
+    static class Tema1 {
+
+        /*
      * Determinau si l'expressió és una tautologia o no:
      *
      * (((vars[0] ops[0] vars[1]) ops[1] vars[2]) ops[2] vars[3]) ...
@@ -73,17 +76,114 @@ class Entrega {
      *   -1 en qualsevol altre cas.
      *
      * Vegeu els tests per exemples.
-     */
-    static final char CONJ = '∧';
-    static final char DISJ = '∨';
-    static final char IMPL = '→';
-    static final char NAND = '.';
+         */
+        static final char CONJ = '∧';
+        static final char DISJ = '∨';
+        static final char IMPL = '→';
+        static final char NAND = '.';
 
-    static int exercici1(char[] ops, int[] vars) {
-      throw new UnsupportedOperationException("pendent");
-    }
+        static int exercici1(char[] ops, int[] vars) {
+            // Obtiene una lista sin variables repetidas
+            ArrayList<Integer> valores = revisarComponentesRepetidas(vars);
+            // Genera la tabla de verdad para esas variables
+            boolean[][] tablaVerdad = generarTablaVerdad(valores.size());
+            // Aplica las operaciones lógicas sobre cada fila de la tabla
+            boolean[] resultados = hacerOperciones(tablaVerdad, ops, vars);
+            // Evalúa si es tautología, contradicción o ninguna
+            int resultadoFinal = revisarResultados(resultados);
+            return resultadoFinal;
+        }
 
-    /*
+        static ArrayList<Integer> revisarComponentesRepetidas(int[] vars) {
+            ArrayList<Integer> valores = new ArrayList<>();
+
+            valores.add(vars[0]);
+            // Agrega solo variables únicas
+            for (int var1 : vars) {
+                boolean meter = true;
+                for (int var2 : valores) {
+                    if (var1 == var2) {
+                        meter = false;
+                    }
+                }
+                if (meter) {
+                    valores.add(var1);
+                }
+            }
+            return valores;
+        }
+
+        static int revisarResultados(boolean[] resultados) {
+            int resultadFinal;
+
+            boolean resultadoContradiccion = true;
+            boolean resultadoTautologia = true;
+
+            // Verifica si todos son true (tautología), todos false (contradicción) o mixto
+            for (boolean b : resultados) {
+                if (b == true) {
+                    resultadoContradiccion = false;
+                } else {
+                    resultadoTautologia = false;
+                }
+            }
+
+            if (resultadoTautologia) {
+                resultadFinal = 1;
+            } else if (resultadoContradiccion) {
+                resultadFinal = 0;
+            } else {
+                resultadFinal = -1;
+            }
+            return resultadFinal;
+        }
+
+        static boolean[] hacerOperciones(boolean[][] tablaVerdad, char[] ops, int[] vars) {
+            boolean[] resultado = new boolean[tablaVerdad.length];
+            for (int i = 0; i < tablaVerdad.length; i++) {
+                // Inicializa con el primer valor
+                resultado[i] = tablaVerdad[i][vars[0]];
+                for (int j = 0; j < ops.length; j++) {
+                    // Aplica operaciones en orden
+                    resultado[i] = operacion(resultado[i], tablaVerdad[i][vars[j + 1]], ops[j]);
+                }
+            }
+            return resultado;
+        }
+
+        static boolean[][] generarTablaVerdad(int numVar) {
+            int fila = (int) Math.pow(2, numVar);
+            boolean[][] tablaVerdad = new boolean[fila][numVar];
+            // Llena la tabla de verdad con todas las combinaciones posibles
+            for (int i = 0; i < fila; i++) {
+                for (int j = numVar - 1; j >= 0; j--) {
+                    if ((i / (int) Math.pow(2, j)) % 2 == 1) {
+                        tablaVerdad[i][j] = true;
+                    } else {
+                        tablaVerdad[i][j] = false;
+                    }
+                }
+            }
+            return tablaVerdad;
+        }
+
+        static boolean operacion(boolean a, boolean b, char operacion) {
+            // Aplica la operación lógica correspondiente
+            boolean resultado = false;
+            switch (operacion) {
+                case CONJ ->
+                    resultado = (a && b);
+                case DISJ ->
+                    resultado = (a || b);
+                case IMPL ->
+                    resultado = (!a || b);
+                case NAND ->
+                    resultado = !(a && b);
+            };
+            return resultado;
+        }
+
+        /*
      * Aquest mètode té de paràmetre l'univers (representat com un array) i els predicats
      * adients `p` i `q`. Per avaluar aquest predicat, si `x` és un element de l'univers, podeu
      * fer-ho com `p.test(x)`, que té com resultat un booleà (true si `P(x)` és cert).
@@ -92,35 +192,52 @@ class Entrega {
      * certa.
      *
      * (∀x : P(x)) <-> (∃!x : Q(x))
-     */
-    static boolean exercici2(int[] universe, Predicate<Integer> p, Predicate<Integer> q) {
-      throw new UnsupportedOperationException("pendent");
+         */
+        static boolean exercici2(int[] universe, Predicate<Integer> p, Predicate<Integer> q) {
+            boolean todosCumplenP = true;
+            boolean unicoCumpleQ = false;
+            int cuentaQ = 0;
+            // Recorre el conjunt
+            // Verifica si todos cumplen P
+            for (int x : universe) {
+                if (!p.test(x)) {
+                    todosCumplenP = false;
+                }
+                // Verifica si cumple Q
+                if (q.test(x)) {
+                    cuentaQ++;
+                }
+            }
+            if(cuentaQ == 1) {
+              unicoCumpleQ = true;
+            }
+            boolean resultado = todosCumplenP == unicoCumpleQ;
+            return resultado;
+        }
+
+        static void tests() {
+            // Exercici 1
+            // Taules de veritat
+
+            // Tautologia: ((p0 → p2) ∨ p1) ∨ p0
+            test(1, 1, 1, () -> exercici1(new char[]{IMPL, DISJ, DISJ}, new int[]{0, 2, 1, 0}) == 1);
+
+            // Contradicció: (p0 . p0) ∧ p0
+            test(1, 1, 2, () -> exercici1(new char[]{NAND, CONJ}, new int[]{0, 0, 0}) == 0);
+
+            // Exercici 2
+            // Equivalència
+            test(1, 2, 1, () -> {
+                return exercici2(new int[]{1, 2, 3}, (x) -> x == 0, (x) -> x == 0);
+            });
+
+            test(1, 2, 2, () -> {
+                return exercici2(new int[]{1, 2, 3}, (x) -> x >= 1, (x) -> x % 2 == 0);
+            });
+        }
     }
 
-    static void tests() {
-      // Exercici 1
-      // Taules de veritat
-
-      // Tautologia: ((p0 → p2) ∨ p1) ∨ p0
-      test(1, 1, 1, () -> exercici1(new char[] { IMPL, DISJ, DISJ }, new int[] { 0, 2, 1, 0 }) == 1);
-
-      // Contradicció: (p0 . p0) ∧ p0
-      test(1, 1, 2, () -> exercici1(new char[] { NAND, CONJ }, new int[] { 0, 0, 0 }) == 0);
-
-      // Exercici 2
-      // Equivalència
-
-      test(1, 2, 1, () -> {
-        return exercici2(new int[] { 1, 2, 3 }, (x) -> x == 0, (x) -> x == 0);
-      });
-
-      test(1, 2, 2, () -> {
-        return exercici2(new int[] { 1, 2, 3 }, (x) -> x >= 1, (x) -> x % 2 == 0);
-      });
-    }
-  }
-
-  /*
+    /*
    * Aquí teniu els exercicis del Tema 2 (Conjunts).
    *
    * Per senzillesa tractarem els conjunts com arrays (sense elements repetits). Per tant, un
@@ -140,166 +257,171 @@ class Entrega {
    * i el codomini int[] b. En el cas de tenir un objecte de tipus Function<Integer, Integer>, per
    * aplicar f a x, és a dir, "f(x)" on x és d'A i el resultat f.apply(x) és de B, s'escriu
    * f.apply(x).
-   */
-  static class Tema2 {
-    /*
+     */
+    static class Tema2 {
+
+        /*
      * Trobau el nombre de particions diferents del conjunt `a`, que podeu suposar que no és buid.
      *
      * Pista: Cercau informació sobre els nombres de Stirling.
-     */
-    static int exercici1(int[] a) {
-      throw new UnsupportedOperationException("pendent");
-    }
+         */
+        static int exercici1(int[] a) {
+            throw new UnsupportedOperationException("pendent");
+        }
 
-    /*
+        /*
      * Trobau el cardinal de la relació d'ordre parcial sobre `a` més petita que conté `rel` (si
      * existeix). En altres paraules, el cardinal de la seva clausura reflexiva, transitiva i
      * antisimètrica.
      *
      * Si no existeix, retornau -1.
-     */
-    static int exercici2(int[] a, int[][] rel) {
-      throw new UnsupportedOperationException("pendent");
-    }
+         */
+        static int exercici2(int[] a, int[][] rel) {
+            throw new UnsupportedOperationException("pendent");
+        }
 
-    /*
+        /*
      * Donada una relació d'ordre parcial `rel` definida sobre `a` i un subconjunt `x` de `a`,
      * retornau:
      * - L'ínfim de `x` si existeix i `op` és false
      * - El suprem de `x` si existeix i `op` és true
      * - null en qualsevol altre cas
-     */
-    static Integer exercici3(int[] a, int[][] rel, int[] x, boolean op) {
-      throw new UnsupportedOperationException("pendent");
-    }
+         */
+        static Integer exercici3(int[] a, int[][] rel, int[] x, boolean op) {
+            throw new UnsupportedOperationException("pendent");
+        }
 
-    /*
+        /*
      * Donada una funció `f` de `a` a `b`, retornau:
      *  - El graf de la seva inversa (si existeix)
      *  - Sinó, el graf d'una inversa seva per l'esquerra (si existeix)
      *  - Sinó, el graf d'una inversa seva per la dreta (si existeix)
      *  - Sinó, null.
-     */
-    static int[][] exercici4(int[] a, int[] b, Function<Integer, Integer> f) {
-      throw new UnsupportedOperationException("pendent");
-    }
+         */
+        static int[][] exercici4(int[] a, int[] b, Function<Integer, Integer> f) {
+            throw new UnsupportedOperationException("pendent");
+        }
 
-    /*
+        /*
      * Aquí teniu alguns exemples i proves relacionades amb aquests exercicis (vegeu `main`)
-     */
-    static void tests() {
-      // Exercici 1
-      // Nombre de particions
+         */
+        static void tests() {
+            // Exercici 1
+            // Nombre de particions
 
-      test(2, 1, 1, () -> exercici1(new int[] { 1 }) == 1);
-      test(2, 1, 2, () -> exercici1(new int[] { 1, 2, 3 }) == 5);
+            test(2, 1, 1, () -> exercici1(new int[]{1}) == 1);
+            test(2, 1, 2, () -> exercici1(new int[]{1, 2, 3}) == 5);
 
-      // Exercici 2
-      // Clausura d'ordre parcial
+            // Exercici 2
+            // Clausura d'ordre parcial
+            final int[] INT02 = {0, 1, 2};
 
-      final int[] INT02 = { 0, 1, 2 };
+            test(2, 2, 1, () -> exercici2(INT02, new int[][]{{0, 1}, {1, 2}}) == 6);
+            test(2, 2, 2, () -> exercici2(INT02, new int[][]{{0, 1}, {1, 0}, {1, 2}}) == -1);
 
-      test(2, 2, 1, () -> exercici2(INT02, new int[][] { {0, 1}, {1, 2} }) == 6);
-      test(2, 2, 2, () -> exercici2(INT02, new int[][] { {0, 1}, {1, 0}, {1, 2} }) == -1);
+            // Exercici 3
+            // Ínfims i suprems
+            final int[] INT15 = {1, 2, 3, 4, 5};
+            final int[][] DIV15 = generateRel(INT15, (n, m) -> m % n == 0);
+            final Integer ONE = 1;
 
-      // Exercici 3
-      // Ínfims i suprems
+            test(2, 3, 1, () -> ONE.equals(exercici3(INT15, DIV15, new int[]{2, 3}, false)));
+            test(2, 3, 2, () -> exercici3(INT15, DIV15, new int[]{2, 3}, true) == null);
 
-      final int[] INT15 = { 1, 2, 3, 4, 5 };
-      final int[][] DIV15 = generateRel(INT15, (n, m) -> m % n == 0);
-      final Integer ONE = 1;
+            // Exercici 4
+            // Inverses
+            final int[] INT05 = {0, 1, 2, 3, 4, 5};
 
-      test(2, 3, 1, () -> ONE.equals(exercici3(INT15, DIV15, new int[] { 2, 3 }, false)));
-      test(2, 3, 2, () -> exercici3(INT15, DIV15, new int[] { 2, 3 }, true) == null);
+            test(2, 4, 1, () -> {
+                var inv = exercici4(INT05, INT02, (x) -> x / 2);
 
-      // Exercici 4
-      // Inverses
+                if (inv == null) {
+                    return false;
+                }
 
-      final int[] INT05 = { 0, 1, 2, 3, 4, 5 };
+                inv = lexSorted(inv);
 
-      test(2, 4, 1, () -> {
-        var inv = exercici4(INT05, INT02, (x) -> x/2);
+                if (inv.length != INT02.length) {
+                    return false;
+                }
 
-        if (inv == null)
-          return false;
+                for (int i = 0; i < INT02.length; i++) {
+                    if (inv[i][0] != i || inv[i][1] / 2 != i) {
+                        return false;
+                    }
+                }
 
-        inv = lexSorted(inv);
+                return true;
+            });
 
-        if (inv.length != INT02.length)
-          return false;
+            test(2, 4, 2, () -> {
+                var inv = exercici4(INT02, INT05, (x) -> x);
 
-        for (int i = 0; i < INT02.length; i++) {
-          if (inv[i][0] != i || inv[i][1]/2 != i)
-            return false;
+                if (inv == null) {
+                    return false;
+                }
+
+                inv = lexSorted(inv);
+
+                if (inv.length != INT05.length) {
+                    return false;
+                }
+
+                for (int i = 0; i < INT02.length; i++) {
+                    if (inv[i][0] != i || inv[i][1] != i) {
+                        return false;
+                    }
+                }
+
+                return true;
+            });
         }
 
-        return true;
-      });
-
-      test(2, 4, 2, () -> {
-        var inv = exercici4(INT02, INT05, (x) -> x);
-
-        if (inv == null)
-          return false;
-
-        inv = lexSorted(inv);
-
-        if (inv.length != INT05.length)
-          return false;
-
-        for (int i = 0; i < INT02.length; i++) {
-          if (inv[i][0] != i || inv[i][1] != i)
-            return false;
-        }
-
-        return true;
-      });
-    }
-
-    /*
+        /*
      * Ordena lexicogràficament un array de 2 dimensions
      * Per exemple:
      *  arr = {{1,0}, {2,2}, {0,1}}
      *  resultat = {{0,1}, {1,0}, {2,2}}
-     */
-    static int[][] lexSorted(int[][] arr) {
-      if (arr == null)
-        return null;
+         */
+        static int[][] lexSorted(int[][] arr) {
+            if (arr == null) {
+                return null;
+            }
 
-      var arr2 = Arrays.copyOf(arr, arr.length);
-      Arrays.sort(arr2, Arrays::compare);
-      return arr2;
-    }
+            var arr2 = Arrays.copyOf(arr, arr.length);
+            Arrays.sort(arr2, Arrays::compare);
+            return arr2;
+        }
 
-    /*
+        /*
      * Genera un array int[][] amb els elements {a, b} (a de as, b de bs) que satisfàn pred.test(a, b)
      * Per exemple:
      *   as = {0, 1}
      *   bs = {0, 1, 2}
      *   pred = (a, b) -> a == b
      *   resultat = {{0,0}, {1,1}}
-     */
-    static int[][] generateRel(int[] as, int[] bs, BiPredicate<Integer, Integer> pred) {
-      var rel = new ArrayList<int[]>();
+         */
+        static int[][] generateRel(int[] as, int[] bs, BiPredicate<Integer, Integer> pred) {
+            var rel = new ArrayList<int[]>();
 
-      for (int a : as) {
-        for (int b : bs) {
-          if (pred.test(a, b)) {
-            rel.add(new int[] { a, b });
-          }
+            for (int a : as) {
+                for (int b : bs) {
+                    if (pred.test(a, b)) {
+                        rel.add(new int[]{a, b});
+                    }
+                }
+            }
+
+            return rel.toArray(new int[][]{});
         }
-      }
 
-      return rel.toArray(new int[][] {});
+        // Especialització de generateRel per as = bs
+        static int[][] generateRel(int[] as, BiPredicate<Integer, Integer> pred) {
+            return generateRel(as, as, pred);
+        }
     }
 
-    // Especialització de generateRel per as = bs
-    static int[][] generateRel(int[] as, BiPredicate<Integer, Integer> pred) {
-      return generateRel(as, as, pred);
-    }
-  }
-
-  /*
+    /*
    * Aquí teniu els exercicis del Tema 3 (Grafs).
    *
    * Els (di)grafs vendran donats com llistes d'adjacència (és a dir, tractau-los com diccionaris
@@ -311,35 +433,36 @@ class Entrega {
    *   {0, 2}, // veïns de 1
    *   {0, 1}  // veïns de 2
    * };
-   */
-  static class Tema3 {
-    /*
-     * Determinau si el graf `g` (no dirigit) té cicles.
      */
-    static boolean exercici1(int[][] g) {
-      throw new UnsupportedOperationException("pendent");
-    }
+    static class Tema3 {
 
-    /*
+        /*
+     * Determinau si el graf `g` (no dirigit) té cicles.
+         */
+        static boolean exercici1(int[][] g) {
+            throw new UnsupportedOperationException("pendent");
+        }
+
+        /*
      * Determinau si els dos grafs són isomorfs. Podeu suposar que cap dels dos té ordre major que
      * 10.
-     */
-    static boolean exercici2(int[][] g1, int[][] g2) {
-      throw new UnsupportedOperationException("pendent");
-    }
+         */
+        static boolean exercici2(int[][] g1, int[][] g2) {
+            throw new UnsupportedOperationException("pendent");
+        }
 
-    /*
+        /*
      * Determinau si el graf `g` (no dirigit) és un arbre. Si ho és, retornau el seu recorregut en
      * postordre desde el vèrtex `r`. Sinó, retornau null;
      *
      * En cas de ser un arbre, assumiu que l'ordre dels fills vé donat per l'array de veïns de cada
      * vèrtex.
-     */
-    static int[] exercici3(int[][] g, int r) {
-      throw new UnsupportedOperationException("pendent");
-    }
+         */
+        static int[] exercici3(int[][] g, int r) {
+            throw new UnsupportedOperationException("pendent");
+        }
 
-    /*
+        /*
      * Suposau que l'entrada és un mapa com el següent, donat com String per files (vegeu els tests)
      *
      *   _____________________________________
@@ -362,63 +485,57 @@ class Entrega {
      *  - No es pot anar en diagonal
      *
      * Si és impossible, retornau -1.
-     */
-    static int exercici4(char[][] mapa) {
-      throw new UnsupportedOperationException("pendent");
+         */
+        static int exercici4(char[][] mapa) {
+            throw new UnsupportedOperationException("pendent");
+        }
+
+        /*
+     * Aquí teniu alguns exemples i proves relacionades amb aquests exercicis (vegeu `main`)
+         */
+        static void tests() {
+
+            final int[][] D2 = {{}, {}};
+            final int[][] C3 = {{1, 2}, {0, 2}, {0, 1}};
+
+            final int[][] T1 = {{1, 2}, {0}, {0}};
+            final int[][] T2 = {{1}, {0, 2}, {1}};
+
+            // Exercici 1
+            // G té cicles?
+            test(3, 1, 1, () -> !exercici1(D2));
+            test(3, 1, 2, () -> exercici1(C3));
+
+            // Exercici 2
+            // Isomorfisme de grafs
+            test(3, 2, 1, () -> exercici2(T1, T2));
+            test(3, 2, 1, () -> !exercici2(T1, C3));
+
+            // Exercici 3
+            // Postordre
+            test(3, 3, 1, () -> exercici3(C3, 1) == null);
+            test(3, 3, 2, () -> Arrays.equals(exercici3(T1, 0), new int[]{1, 2, 0}));
+
+            // Exercici 4
+            // Laberint
+            test(3, 4, 1, () -> {
+                return -1 == exercici4(new char[][]{
+                    " #O".toCharArray(),
+                    "D# ".toCharArray(),
+                    " # ".toCharArray(),});
+            });
+
+            test(3, 4, 2, () -> {
+                return 8 == exercici4(new char[][]{
+                    "###D".toCharArray(),
+                    "O # ".toCharArray(),
+                    " ## ".toCharArray(),
+                    "    ".toCharArray(),});
+            });
+        }
     }
 
     /*
-     * Aquí teniu alguns exemples i proves relacionades amb aquests exercicis (vegeu `main`)
-     */
-    static void tests() {
-
-      final int[][] D2 = { {}, {} };
-      final int[][] C3 = { {1, 2}, {0, 2}, {0, 1} };
-
-      final int[][] T1 = { {1, 2}, {0}, {0} };
-      final int[][] T2 = { {1}, {0, 2}, {1} };
-
-      // Exercici 1
-      // G té cicles?
-
-      test(3, 1, 1, () -> !exercici1(D2));
-      test(3, 1, 2, () -> exercici1(C3));
-
-      // Exercici 2
-      // Isomorfisme de grafs
-
-      test(3, 2, 1, () -> exercici2(T1, T2));
-      test(3, 2, 1, () -> !exercici2(T1, C3));
-
-      // Exercici 3
-      // Postordre
-
-      test(3, 3, 1, () -> exercici3(C3, 1) == null);
-      test(3, 3, 2, () -> Arrays.equals(exercici3(T1, 0), new int[] { 1, 2, 0 }));
-
-      // Exercici 4
-      // Laberint
-
-      test(3, 4, 1, () -> {
-        return -1 == exercici4(new char[][] {
-            " #O".toCharArray(),
-            "D# ".toCharArray(),
-            " # ".toCharArray(),
-        });
-      });
-
-      test(3, 4, 2, () -> {
-        return 8 == exercici4(new char[][] {
-            "###D".toCharArray(),
-            "O # ".toCharArray(),
-            " ## ".toCharArray(),
-            "    ".toCharArray(),
-        });
-      });
-    }
-  }
-
-  /*
    * Aquí teniu els exercicis del Tema 4 (Aritmètica).
    *
    * En aquest tema no podeu:
@@ -427,48 +544,49 @@ class Entrega {
    *  - Utilitzar long, float ni double.
    *
    * Si implementau algun dels exercicis així, tendreu un 0 d'aquell exercici.
-   */
-  static class Tema4 {
-    // Els penjarem més envant
+     */
+    static class Tema4 {
+        // Els penjarem més envant
 
-    static void tests() {
+        static void tests() {
+        }
     }
-  }
 
-  /*
+    /*
    * Aquest mètode `main` conté alguns exemples de paràmetres i dels resultats que haurien de donar
    * els exercicis. Podeu utilitzar-los de guia i també en podeu afegir d'altres (no els tendrem en
    * compte, però és molt recomanable).
    *
    * Podeu aprofitar el mètode `test` per comprovar fàcilment que un valor sigui `true`.
-   */
-  public static void main(String[] args) {
-    System.out.println("---- Tema 1 ----");
-    Tema1.tests();
-    System.out.println("---- Tema 2 ----");
-    Tema2.tests();
-    System.out.println("---- Tema 3 ----");
-    Tema3.tests();
-    System.out.println("---- Tema 4 ----");
-    Tema4.tests();
-  }
-
-  // Informa sobre el resultat de p, juntament amb quin tema, exercici i test es correspon.
-  static void test(int tema, int exercici, int test, BooleanSupplier p) {
-    try {
-      if (p.getAsBoolean())
-        System.out.printf("Tema %d, exercici %d, test %d: OK\n", tema, exercici, test);
-      else
-        System.out.printf("Tema %d, exercici %d, test %d: Error\n", tema, exercici, test);
-    } catch (Exception e) {
-      if (e instanceof UnsupportedOperationException && "pendent".equals(e.getMessage())) {
-        System.out.printf("Tema %d, exercici %d, test %d: Pendent\n", tema, exercici, test);
-      } else {
-        System.out.printf("Tema %d, exercici %d, test %d: Excepció\n", tema, exercici, test);
-        e.printStackTrace();
-      }
+     */
+    public static void main(String[] args) {
+        System.out.println("---- Tema 1 ----");
+        Tema1.tests();
+        System.out.println("---- Tema 2 ----");
+        Tema2.tests();
+        System.out.println("---- Tema 3 ----");
+        Tema3.tests();
+        System.out.println("---- Tema 4 ----");
+        Tema4.tests();
     }
-  }
+
+    // Informa sobre el resultat de p, juntament amb quin tema, exercici i test es correspon.
+    static void test(int tema, int exercici, int test, BooleanSupplier p) {
+        try {
+            if (p.getAsBoolean()) {
+                System.out.printf("Tema %d, exercici %d, test %d: OK\n", tema, exercici, test);
+            } else {
+                System.out.printf("Tema %d, exercici %d, test %d: Error\n", tema, exercici, test);
+            }
+        } catch (Exception e) {
+            if (e instanceof UnsupportedOperationException && "pendent".equals(e.getMessage())) {
+                System.out.printf("Tema %d, exercici %d, test %d: Pendent\n", tema, exercici, test);
+            } else {
+                System.out.printf("Tema %d, exercici %d, test %d: Excepció\n", tema, exercici, test);
+                e.printStackTrace();
+            }
+        }
+    }
 }
 
 // vim: set textwidth=100 shiftwidth=2 expandtab :
