@@ -208,8 +208,8 @@ class Entrega {
                     cuentaQ++;
                 }
             }
-            if(cuentaQ == 1) {
-              unicoCumpleQ = true;
+            if (cuentaQ == 1) {
+                unicoCumpleQ = true;
             }
             boolean resultado = todosCumplenP == unicoCumpleQ;
             return resultado;
@@ -266,7 +266,31 @@ class Entrega {
      * Pista: Cercau informació sobre els nombres de Stirling.
          */
         static int exercici1(int[] a) {
-            throw new UnsupportedOperationException("pendent");
+            int numeroElementosA = a.length;
+
+            // Tabla donde stirling[i][j] representa S(i, j)
+            int[][] stirling = new int[numeroElementosA + 1][numeroElementosA + 1];
+
+            // Caso base: hay 1 forma de particionar 0 elementos en 0 conjuntos
+            stirling[0][0] = 1;
+
+            // Rellenamos la tabla usando la fórmula recursiva vista en wikipedia
+            // S(n, k) = S(n-1, k-1) + k * S(n-1, k)
+            for (int elementos = 1; elementos <= numeroElementosA; elementos++) {
+                for (int subconjuntos = 1; subconjuntos <= elementos; subconjuntos++) {
+                    stirling[elementos][subconjuntos]
+                            = stirling[elementos - 1][subconjuntos - 1]
+                            + subconjuntos * stirling[elementos - 1][subconjuntos];
+                }
+            }
+
+            // Sumamos S(n, k) para k = 1 hasta n → número total de particiones
+            int totalParticiones = 0;
+            for (int k = 1; k <= numeroElementosA; k++) {
+                totalParticiones += stirling[numeroElementosA][k];
+            }
+
+            return totalParticiones;
         }
 
         /*
@@ -277,7 +301,52 @@ class Entrega {
      * Si no existeix, retornau -1.
          */
         static int exercici2(int[] a, int[][] rel) {
-            throw new UnsupportedOperationException("pendent");
+
+            ArrayList<int[]> relacion = new ArrayList<>();
+            for (int[] elemento : rel) {
+                relacion.add(elemento);
+            }
+            // Comprovació de reflexivitat
+            for (int elemento : a) {
+                boolean existe = false;
+                for (int[] elementoRel : relacion) {
+                    if (elemento == elementoRel[0] && elemento == elementoRel[1]) {
+                        existe = true;
+                    }
+                }
+                if (!existe) {
+                    relacion.add(new int[]{elemento, elemento});
+                }
+            }
+            //comprovacion transitiva
+            for (int parOrdenado1 = 0; parOrdenado1 < relacion.size(); parOrdenado1++) {
+                for (int parOrdenado2 = 0; parOrdenado2 < relacion.size(); parOrdenado2++){
+                    boolean esTransitiva = false;
+                    boolean estanRelacionados = false;
+                    if(relacion.get(parOrdenado1)[1] == relacion.get(parOrdenado2)[0]){
+                        estanRelacionados = true;
+                        for(int indiceAux = 0; indiceAux < relacion.size(); indiceAux++){
+                            if(relacion.get(parOrdenado1)[0] == relacion.get(indiceAux)[0]&&relacion.get(parOrdenado2)[1] == relacion.get(indiceAux)[1]){
+                                esTransitiva = true;
+                            }
+                        }
+                    }
+                    if(!esTransitiva && estanRelacionados){
+                        relacion.add(new int[]{relacion.get(parOrdenado1)[0], relacion.get(parOrdenado2)[1]});
+                    }
+                }
+            }
+            //antitransitiva 
+            for (int parOrdenado1 = 0; parOrdenado1 < relacion.size(); parOrdenado1++) {
+                for (int parOrdenado2 = parOrdenado1+1; parOrdenado2 < relacion.size(); parOrdenado2++){
+                    if(relacion.get(parOrdenado1)[0] == relacion.get(parOrdenado2)[1]&&relacion.get(parOrdenado1)[1] == relacion.get(parOrdenado2)[0]){
+                        if(relacion.get(parOrdenado1)[0] != relacion.get(parOrdenado1)[1]){
+                            return -1;
+                        }
+                    }
+                }
+            }
+            return relacion.size();
         }
 
         /*
