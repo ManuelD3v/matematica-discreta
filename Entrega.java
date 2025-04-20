@@ -1,14 +1,10 @@
 
-import java.lang.AssertionError;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.stream.IntStream;
 
 /*
  * Aquesta entrega consisteix en implementar tots els mètodes anomenats "exerciciX". Ara mateix la
@@ -320,27 +316,27 @@ class Entrega {
             }
             //comprovacion transitiva
             for (int parOrdenado1 = 0; parOrdenado1 < relacion.size(); parOrdenado1++) {
-                for (int parOrdenado2 = 0; parOrdenado2 < relacion.size(); parOrdenado2++){
+                for (int parOrdenado2 = 0; parOrdenado2 < relacion.size(); parOrdenado2++) {
                     boolean esTransitiva = false;
                     boolean estanRelacionados = false;
-                    if(relacion.get(parOrdenado1)[1] == relacion.get(parOrdenado2)[0]){
+                    if (relacion.get(parOrdenado1)[1] == relacion.get(parOrdenado2)[0]) {
                         estanRelacionados = true;
-                        for(int indiceAux = 0; indiceAux < relacion.size(); indiceAux++){
-                            if(relacion.get(parOrdenado1)[0] == relacion.get(indiceAux)[0]&&relacion.get(parOrdenado2)[1] == relacion.get(indiceAux)[1]){
+                        for (int indiceAux = 0; indiceAux < relacion.size(); indiceAux++) {
+                            if (relacion.get(parOrdenado1)[0] == relacion.get(indiceAux)[0] && relacion.get(parOrdenado2)[1] == relacion.get(indiceAux)[1]) {
                                 esTransitiva = true;
                             }
                         }
                     }
-                    if(!esTransitiva && estanRelacionados){
+                    if (!esTransitiva && estanRelacionados) {
                         relacion.add(new int[]{relacion.get(parOrdenado1)[0], relacion.get(parOrdenado2)[1]});
                     }
                 }
             }
             //antitransitiva 
             for (int parOrdenado1 = 0; parOrdenado1 < relacion.size(); parOrdenado1++) {
-                for (int parOrdenado2 = parOrdenado1+1; parOrdenado2 < relacion.size(); parOrdenado2++){
-                    if(relacion.get(parOrdenado1)[0] == relacion.get(parOrdenado2)[1]&&relacion.get(parOrdenado1)[1] == relacion.get(parOrdenado2)[0]){
-                        if(relacion.get(parOrdenado1)[0] != relacion.get(parOrdenado1)[1]){
+                for (int parOrdenado2 = parOrdenado1 + 1; parOrdenado2 < relacion.size(); parOrdenado2++) {
+                    if (relacion.get(parOrdenado1)[0] == relacion.get(parOrdenado2)[1] && relacion.get(parOrdenado1)[1] == relacion.get(parOrdenado2)[0]) {
+                        if (relacion.get(parOrdenado1)[0] != relacion.get(parOrdenado1)[1]) {
                             return -1;
                         }
                     }
@@ -357,7 +353,129 @@ class Entrega {
      * - null en qualsevol altre cas
          */
         static Integer exercici3(int[] a, int[][] rel, int[] x, boolean op) {
-            throw new UnsupportedOperationException("pendent");
+
+            ArrayList<Integer> maximales = buscarMaximales(a, rel, x);
+            ArrayList<Integer> minimales = buscarMinimales(a, rel, x);
+
+            if (op) {
+                // El suprem de `x` si existeix i `op` és true
+                if (maximales.size() != 1) {
+                    return null;
+                } else {
+                    return maximales.get(0);
+                }
+            } else {
+                // L'ínfim de `x` si existeix i `op` és false
+                if (minimales.size() != 1) {
+                    return null;
+                } else {
+                    return minimales.get(0);
+                }
+            }
+
+        }
+
+        static ArrayList<Integer> buscarMaximales(int[] a, int[][] rel, int[] x) {
+            ArrayList<ArrayList<Integer>> maximalesProvisionales = new ArrayList<>();
+
+            for (int i = 0; i < x.length; i++) {
+                int elemento = x[i];
+                maximalesProvisionales.add(new ArrayList<>());
+                for (int[] par : rel) {
+                    if (elemento == par[0]) {
+                        maximalesProvisionales.get(i).add(par[1]);
+                    }
+                }
+            }
+            ArrayList<Integer> maxilames = buscarComunes(maximalesProvisionales);
+            ArrayList<Integer> maxilReal = new ArrayList<>();
+
+            for (int elem : maxilames) {
+                
+                for (int[] rel1 : rel) {
+                    if (elem == rel1[0]) {
+                        maxilReal.add(elem);
+                    }
+                }
+            }
+
+            return maxilReal;
+        }
+
+        static ArrayList<Integer> buscarMinimales(int[] a, int[][] rel, int[] x) {
+
+            ArrayList<ArrayList<Integer>> minimalesProvisionales = new ArrayList<>();
+            for (int i = 0; i < x.length; i++) {
+                int elemento = x[i];
+                minimalesProvisionales.add(new ArrayList<>());
+                for (int[] par : rel) {
+                    if (elemento == par[1]) {
+                        minimalesProvisionales.get(i).add(par[0]);
+                    }
+                }
+            }
+
+            ArrayList<Integer> minimales = buscarComunes(minimalesProvisionales);
+
+            //depurar minimales
+            ArrayList<Integer> infimos = new ArrayList<>();
+            for (int elemento1 : minimales) {
+                boolean estaRelacionado = false;
+                for (int elemento2 : minimales) {
+                    if (elemento1 != elemento2) {
+                        estaRelacionado = false;
+                        for (int[] par : rel) {
+                            if (par[0] == elemento1 && par[1] == elemento2 && !estaRelacionado) {
+                                estaRelacionado = true;
+                            }
+                        }
+                    }
+                }
+                
+                if (!estaRelacionado) {
+                    boolean aparece = false;
+                    if (!infimos.isEmpty()) {
+                        for (int elementoInfimos : infimos) {
+                            if (elemento1 == elementoInfimos) {
+                                aparece = true;
+                            }
+                        }
+                    }
+                    if (!aparece) {
+                        infimos.add(elemento1);
+                    }
+                }
+            }
+            if(infimos.isEmpty()){
+                for(int elemento : minimales){
+                    infimos.add(elemento);
+                }
+            }
+            return minimales;
+        }
+
+        static ArrayList<Integer> buscarComunes(ArrayList<ArrayList<Integer>> minimalesProvisionales) {
+            ArrayList<Integer> comunes = new ArrayList<>();
+            for (int i = 0; i < minimalesProvisionales.size(); i++) {
+                for (int i2 = 0; i2 < minimalesProvisionales.get(i).size(); i2++) {
+                    for (int j = i + 1; j < minimalesProvisionales.size(); j++) {
+                        for (int j2 = 0; j2 < minimalesProvisionales.get(j).size(); j2++) {
+                            if ((int) minimalesProvisionales.get(i).get(i2) == (int) minimalesProvisionales.get(j).get(j2)) {
+                                boolean aparece = false;
+                                for (int num : comunes) {
+                                    if (num == (int) minimalesProvisionales.get(i).get(i2)) {
+                                        aparece = true;
+                                    }
+                                }
+                                if (!aparece) {
+                                    comunes.add(minimalesProvisionales.get(i).get(i2));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return comunes;
         }
 
         /*
@@ -396,6 +514,17 @@ class Entrega {
 
             test(2, 3, 1, () -> ONE.equals(exercici3(INT15, DIV15, new int[]{2, 3}, false)));
             test(2, 3, 2, () -> exercici3(INT15, DIV15, new int[]{2, 3}, true) == null);
+// Conjunto A y su relación (divisibilidad)
+            final int[] A = {1, 2, 3, 4, 6, 12};
+            final int[][] REL = Tema2.generateRel(A, (a, b) -> b % a == 0);
+
+// Subconjunto X con más elementos
+            final int[] X = {3, 4, 6, 12};
+
+// Ínfimo: el mayor que divide a todos los de X → 1
+            // test(2, 3, 3, () -> exercici3(A, REL, X, false) == 1);
+// Suprem: el menor divisible por todos los de X → no existe
+            test(2, 3, 4, () -> exercici3(A, REL, X, true) == null);
 
             // Exercici 4
             // Inverses
