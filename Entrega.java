@@ -1,10 +1,14 @@
 
+import java.lang.AssertionError;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.IntStream;
 
 /*
  * Aquesta entrega consisteix en implementar tots els mètodes anomenats "exerciciX". Ara mateix la
@@ -354,10 +358,8 @@ class Entrega {
          */
         static Integer exercici3(int[] a, int[][] rel, int[] x, boolean op) {
 
-            ArrayList<Integer> maximales = buscarMaximales(a, rel, x);
-            ArrayList<Integer> minimales = buscarMinimales(a, rel, x);
-
             if (op) {
+                ArrayList<Integer> maximales = buscarMaximales(a, rel, x);
                 // El suprem de `x` si existeix i `op` és true
                 if (maximales.size() != 1) {
                     return null;
@@ -365,6 +367,7 @@ class Entrega {
                     return maximales.get(0);
                 }
             } else {
+                ArrayList<Integer> minimales = buscarMinimales(a, rel, x);
                 // L'ínfim de `x` si existeix i `op` és false
                 if (minimales.size() != 1) {
                     return null;
@@ -376,82 +379,84 @@ class Entrega {
         }
 
         static ArrayList<Integer> buscarMaximales(int[] a, int[][] rel, int[] x) {
-            ArrayList<ArrayList<Integer>> maximalesProvisionales = new ArrayList<>();
-
+            ArrayList<ArrayList<Integer>> cotaSuperiorDeElementos = new ArrayList<>();
+            // buscamos las cotas superiores de cada elemento
             for (int i = 0; i < x.length; i++) {
                 int elemento = x[i];
-                maximalesProvisionales.add(new ArrayList<>());
+                cotaSuperiorDeElementos.add(new ArrayList<>());
                 for (int[] par : rel) {
                     if (elemento == par[0]) {
-                        maximalesProvisionales.get(i).add(par[1]);
+                        cotaSuperiorDeElementos.get(i).add(par[1]);
                     }
                 }
             }
-            ArrayList<Integer> maxilames = buscarComunes(maximalesProvisionales);
-            ArrayList<Integer> maxilReal = new ArrayList<>();
+            //miramos las cotas superiores de cada elemento y los ponemos en la cota superior del subconjunto
+            ArrayList<Integer> cotaSuperior = buscarComunes(cotaSuperiorDeElementos);
 
-            for (int elem : maxilames) {
-                
-                for (int[] rel1 : rel) {
-                    if (elem == rel1[0]) {
-                        maxilReal.add(elem);
+            //depurar cota Inferior para sacar minimales
+            ArrayList<Integer> maximales = new ArrayList<>();
+
+            for (int num : cotaSuperior) {
+                for (int num2 : cotaSuperior) {
+                    if (num != num2) {
+                        int[] par = {num2, num};
+                        if (!contienePar(rel, par)) {
+                            maximales.add(num);
+                            break;
+                        }
                     }
                 }
             }
-
-            return maxilReal;
+            if (maximales.isEmpty()) {
+                for (int element : cotaSuperior) {
+                    maximales.add(element);
+                }
+            }
+            return maximales;
         }
 
         static ArrayList<Integer> buscarMinimales(int[] a, int[][] rel, int[] x) {
 
-            ArrayList<ArrayList<Integer>> minimalesProvisionales = new ArrayList<>();
+            ArrayList<ArrayList<Integer>> cotaInferiorDeElementos = new ArrayList<>();
             for (int i = 0; i < x.length; i++) {
                 int elemento = x[i];
-                minimalesProvisionales.add(new ArrayList<>());
+                cotaInferiorDeElementos.add(new ArrayList<>());
                 for (int[] par : rel) {
                     if (elemento == par[1]) {
-                        minimalesProvisionales.get(i).add(par[0]);
+                        cotaInferiorDeElementos.get(i).add(par[0]);
                     }
                 }
             }
 
-            ArrayList<Integer> minimales = buscarComunes(minimalesProvisionales);
+            ArrayList<Integer> cotaInferior = buscarComunes(cotaInferiorDeElementos);
+            ArrayList<Integer> minimales = new ArrayList<>();
 
-            //depurar minimales
-            ArrayList<Integer> infimos = new ArrayList<>();
-            for (int elemento1 : minimales) {
-                boolean estaRelacionado = false;
-                for (int elemento2 : minimales) {
-                    if (elemento1 != elemento2) {
-                        estaRelacionado = false;
-                        for (int[] par : rel) {
-                            if (par[0] == elemento1 && par[1] == elemento2 && !estaRelacionado) {
-                                estaRelacionado = true;
-                            }
+            for (int num : cotaInferior) {
+                boolean esMinimal = true;
+                for (int num2 : cotaInferior) {
+                    if (num != num2) {
+                        int[] par = {num2, num}; // num2 ≤ num en la relación → num no es mínimo
+                        if (!contienePar(rel, par)) {
+                            esMinimal = false;
+                            break;
                         }
                     }
                 }
-                
-                if (!estaRelacionado) {
-                    boolean aparece = false;
-                    if (!infimos.isEmpty()) {
-                        for (int elementoInfimos : infimos) {
-                            if (elemento1 == elementoInfimos) {
-                                aparece = true;
-                            }
-                        }
-                    }
-                    if (!aparece) {
-                        infimos.add(elemento1);
-                    }
-                }
-            }
-            if(infimos.isEmpty()){
-                for(int elemento : minimales){
-                    infimos.add(elemento);
+                if (esMinimal) {
+                    minimales.add(num);
                 }
             }
             return minimales;
+
+        }
+
+        static boolean contienePar(int[][] rel, int[] par) {
+            for (int[] fila : rel) {
+                if (fila[0] == par[0] && fila[1] == par[1]) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         static ArrayList<Integer> buscarComunes(ArrayList<ArrayList<Integer>> minimalesProvisionales) {
@@ -486,7 +491,81 @@ class Entrega {
      *  - Sinó, null.
          */
         static int[][] exercici4(int[] a, int[] b, Function<Integer, Integer> f) {
-            throw new UnsupportedOperationException("pendent");
+            // Array auxiliar para guardar (y = f(x), x)
+            int[][] imagen = new int[a.length][2];
+
+            // Para verificar inyectividad
+            boolean esInyectiva = true;
+            for (int i = 0; i < a.length; i++) {
+                int x = a[i];
+                int fx = f.apply(x);
+                imagen[i][0] = fx;
+                imagen[i][1] = x;
+
+                // Comparar con anteriores para detectar duplicados (no inyectiva)
+                for (int j = 0; j < i; j++) {
+                    if (imagen[j][0] == fx) {
+                        esInyectiva = false;
+                        break;
+                    }
+                }
+                if (!esInyectiva) {
+                    break;
+                }
+            }
+
+            // Para verificar exhaustividad: cada b[j] debe estar como f(x) para algún x
+            boolean esExhaustiva = true;
+            for (int i = 0; i < b.length; i++) {
+                boolean encontrado = false;
+                for (int x : a) {
+                    if (f.apply(x) == b[i]) {
+                        encontrado = true;
+                        break;
+                    }
+                }
+                if (!encontrado) {
+                    esExhaustiva = false;
+                    break;
+                }
+            }
+
+            // Biyectiva → inversa completa
+            if (esInyectiva && esExhaustiva) {
+                int[][] inversa = new int[b.length][2];
+                for (int i = 0; i < a.length; i++) {
+                    inversa[i][0] = imagen[i][0];
+                    inversa[i][1] = imagen[i][1];
+                }
+                return Tema2.lexSorted(inversa);
+            }
+
+            // Inyectiva → inversa por la izquierda
+            if (esInyectiva) {
+                int[][] inversa = new int[a.length][2];
+                for (int i = 0; i < a.length; i++) {
+                    inversa[i][0] = imagen[i][0];
+                    inversa[i][1] = imagen[i][1];
+                }
+                return Tema2.lexSorted(inversa);
+            }
+
+            // Suprayectiva → inversa por la derecha
+            if (esExhaustiva) {
+                ArrayList<int[]> inversa = new ArrayList<>();
+                for (int y : b) {
+                    for (int x : a) {
+                        if (f.apply(x) == y) {
+                            inversa.add(new int[]{y, x});
+                            break;
+                        }
+                    }
+                }
+                return Tema2.lexSorted(inversa.toArray(new int[0][]));
+            }
+
+            // No existe inversa
+            return null;
         }
 
         /*
@@ -511,20 +590,23 @@ class Entrega {
             final int[] INT15 = {1, 2, 3, 4, 5};
             final int[][] DIV15 = generateRel(INT15, (n, m) -> m % n == 0);
             final Integer ONE = 1;
+            final Integer TWO = 2;
+            final Integer THREE = 3;
+            final Integer FOUR = 4;
+            final Integer FIVE = 5;
 
             test(2, 3, 1, () -> ONE.equals(exercici3(INT15, DIV15, new int[]{2, 3}, false)));
             test(2, 3, 2, () -> exercici3(INT15, DIV15, new int[]{2, 3}, true) == null);
-// Conjunto A y su relación (divisibilidad)
-            final int[] A = {1, 2, 3, 4, 6, 12};
-            final int[][] REL = Tema2.generateRel(A, (a, b) -> b % a == 0);
-
-// Subconjunto X con más elementos
-            final int[] X = {3, 4, 6, 12};
-
-// Ínfimo: el mayor que divide a todos los de X → 1
-            // test(2, 3, 3, () -> exercici3(A, REL, X, false) == 1);
-// Suprem: el menor divisible por todos los de X → no existe
-            test(2, 3, 4, () -> exercici3(A, REL, X, true) == null);
+            test(2, 3, 3, () -> TWO.equals(exercici3(INT15, DIV15, new int[]{2, 4}, false)));
+            test(2, 3, 4, () -> FOUR.equals(exercici3(INT15, DIV15, new int[]{2, 4}, true)));
+            test(2, 3, 5, () -> ONE.equals(exercici3(INT15, DIV15, new int[]{3, 5}, false)));
+            test(2, 3, 6, () -> exercici3(INT15, DIV15, new int[]{3, 5}, true) == null);
+            test(2, 3, 7, () -> ONE.equals(exercici3(INT15, DIV15, new int[]{4, 5}, false)));
+            test(2, 3, 8, () -> exercici3(INT15, DIV15, new int[]{4, 5}, true) == null);
+            test(2, 3, 9, () -> ONE.equals(exercici3(INT15, DIV15, new int[]{1, 2, 3}, false)));
+            test(2, 3, 10, () -> exercici3(INT15, DIV15, new int[]{1, 2, 3}, true) == null);
+            test(2, 3, 11, () -> ONE.equals(exercici3(INT15, DIV15, new int[]{2, 3, 4}, false)));
+            test(2, 3, 12, () -> exercici3(INT15, DIV15, new int[]{2, 3, 4}, true) == null);
 
             // Exercici 4
             // Inverses
