@@ -357,7 +357,7 @@ class Entrega {
      * - null en qualsevol altre cas
          */
         static Integer exercici3(int[] a, int[][] rel, int[] x, boolean op) {
-
+            // TODO ejercicio 3 conjuntos
             if (op) {
                 ArrayList<Integer> maximales = buscarMaximales(a, rel, x);
                 // El suprem de `x` si existeix i `op` és true
@@ -491,6 +491,7 @@ class Entrega {
      *  - Sinó, null.
          */
         static int[][] exercici4(int[] a, int[] b, Function<Integer, Integer> f) {
+            // TODO ejercicio 4 conjuntos
             // Array auxiliar para guardar (y = f(x), x)
             int[][] imagen = new int[a.length][2];
 
@@ -720,15 +721,125 @@ class Entrega {
      * Determinau si el graf `g` (no dirigit) té cicles.
          */
         static boolean exercici1(int[][] g) {
-            throw new UnsupportedOperationException("pendent");
+            int vertices = g.length;
+            boolean[] visitado = new boolean[vertices];
+            int[] padre = new int[vertices];
+            Arrays.fill(padre, -1);
+
+            for (int inicio = 0; inicio < vertices; inicio++) {
+                if (!visitado[inicio]) {
+                    ArrayList<Integer> pila = new ArrayList<>();
+                    pila.add(inicio);
+                    visitado[inicio] = true;
+
+                    while (!pila.isEmpty()) {
+                        int actual = pila.remove(pila.size() - 1);
+
+                        for (int vecino : g[actual]) {
+                            if (!visitado[vecino]) {
+                                visitado[vecino] = true;
+                                padre[vecino] = actual;
+                                pila.add(vecino);
+                            } else if (vecino != padre[actual]) {
+                                // Encontramos un ciclo
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return false;
         }
+
 
         /*
      * Determinau si els dos grafs són isomorfs. Podeu suposar que cap dels dos té ordre major que
      * 10.
          */
         static boolean exercici2(int[][] g1, int[][] g2) {
-            throw new UnsupportedOperationException("pendent");
+            int numeroVerticesG1 = g1.length;
+            if (g2.length != numeroVerticesG1) {
+                return false;
+            }
+
+            // Comparamos los grados
+            int[] grados1 = new int[numeroVerticesG1];
+            int[] grados2 = new int[numeroVerticesG1];
+            for (int i = 0; i < numeroVerticesG1; i++) {
+                grados1[i] = g1[i].length;
+                grados2[i] = g2[i].length;
+            }
+
+            Arrays.sort(grados1);
+            Arrays.sort(grados2);
+
+            for (int indice = 0; indice < grados1.length; indice++) {
+                if(grados1[indice]!=grados2[indice] ){
+                    return false;
+                }
+            }
+
+            // Probar todas las permutaciones
+            int[] permutaciones = new int[numeroVerticesG1];
+            for (int i = 0; i < numeroVerticesG1; i++) {
+                permutaciones[i] = i;
+            }
+
+            do {
+                if (sonIsomorfos(g1, g2, permutaciones)) {
+                    return true;
+                }
+            } while (siguientePermutacion(permutaciones));
+
+            return false;
+        }
+
+// Compara g1 con g2 permutado por `perm`
+        static boolean sonIsomorfos(int[][] g1, int[][] g2, int[] permutaciones) {
+            int numeroPermutaciones = permutaciones.length;
+
+            for (int permutacion = 0; permutacion < numeroPermutaciones; permutacion++) {
+                boolean[] relaciones1 = new boolean[numeroPermutaciones];
+                for (int vecino : g1[permutacion]) {
+                    relaciones1[permutaciones[vecino]] = true;
+                }
+
+                boolean[] relaciones2 = new boolean[numeroPermutaciones];
+                for (int vecino : g2[permutaciones[permutacion]]) {
+                    relaciones2[vecino] = true;
+                }
+
+                if (!Arrays.equals(relaciones1, relaciones2)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+// Genera la siguiente permutación lexicográfica
+        static boolean siguientePermutacion(int[] permutaciones) {
+            int i = permutaciones.length - 2;
+            while (i >= 0 && permutaciones[i] >= permutaciones[i + 1]) {
+                i--;
+            }
+            if (i < 0) {
+                return false;
+            }
+            int j = permutaciones.length - 1;
+            while (permutaciones[j] <= permutaciones[i]) {
+                j--;
+            }
+            int tmp = permutaciones[i];
+            permutaciones[i] = permutaciones[j];
+            permutaciones[j] = tmp;
+            for (int k = i + 1, l = permutaciones.length - 1; k < l; k++, l--) {
+                tmp = permutaciones[k];
+                permutaciones[k] = permutaciones[l];
+                permutaciones[l] = tmp;
+            }
+            return true;
         }
 
         /*
@@ -785,11 +896,23 @@ class Entrega {
             // G té cicles?
             test(3, 1, 1, () -> !exercici1(D2));
             test(3, 1, 2, () -> exercici1(C3));
+            final int[][] G1 = {{1}, {0}}; // 2 nodos, 1 arista — sin ciclo
+            final int[][] G2 = {{1, 2}, {0}, {0, 3}, {2}}; // árbol — sin ciclo
+            final int[][] G3 = {{1}, {0, 2}, {1, 3, 4}, {2}, {2}}; // árbol — sin ciclo
+            final int[][] G4 = {{1, 2}, {0, 2}, {0, 1}}; // triángulo — con ciclo
+            final int[][] G5 = {{1, 3}, {0, 2}, {1, 3}, {0, 2}}; // ciclo de 4 nodos — con ciclo
+
+            test(3, 1, 3, () -> !exercici1(G1));
+            test(3, 1, 4, () -> !exercici1(G2));
+            test(3, 1, 5, () -> !exercici1(G3));
+            test(3, 1, 6, () -> exercici1(G4));
+            test(3, 1, 7, () -> exercici1(G5));
 
             // Exercici 2
             // Isomorfisme de grafs
             test(3, 2, 1, () -> exercici2(T1, T2));
-            test(3, 2, 1, () -> !exercici2(T1, C3));
+            test(3, 2, 2, () -> !exercici2(T1, C3));
+            
 
             // Exercici 3
             // Postordre
