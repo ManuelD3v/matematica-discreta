@@ -1,4 +1,3 @@
-
 import java.lang.AssertionError;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -820,27 +819,39 @@ class Entrega {
 
 // Genera la siguiente permutación lexicográfica
         static boolean siguientePermutacion(int[] permutaciones) {
+            // Paso 1: Buscar el primer índice 'i' desde la derecha tal que permutaciones[i] < permutaciones[i + 1]
             int i = permutaciones.length - 2;
             while (i >= 0 && permutaciones[i] >= permutaciones[i + 1]) {
-                i--;
+                i--; // retrocede hasta encontrar un par ascendente
             }
+
+            // Si no se encontró tal 'i', la permutación es la última en orden lexicográfico
             if (i < 0) {
-                return false;
+                return false; // no hay siguiente permutación
             }
+
+            // Paso 2: Buscar el primer índice 'j' desde la derecha tal que permutaciones[j] > permutaciones[i]
             int j = permutaciones.length - 1;
             while (permutaciones[j] <= permutaciones[i]) {
                 j--;
             }
-            int tmp = permutaciones[i];
+
+            // Paso 3: Intercambiar los valores en las posiciones 'i' y 'j'
+            int temporal = permutaciones[i];
             permutaciones[i] = permutaciones[j];
-            permutaciones[j] = tmp;
+            permutaciones[j] = temporal;
+
+            // Paso 4: Invertir el sufijo a partir de la posición 'i + 1' hasta el final del arreglo
             for (int k = i + 1, l = permutaciones.length - 1; k < l; k++, l--) {
-                tmp = permutaciones[k];
+                temporal = permutaciones[k];
                 permutaciones[k] = permutaciones[l];
-                permutaciones[l] = tmp;
+                permutaciones[l] = temporal;
             }
+
+            // Se ha generado correctamente la siguiente permutación lexicográfica
             return true;
         }
+
 
         /*
      * Determinau si el graf `g` (no dirigit) és un arbre. Si ho és, retornau el seu recorregut en
@@ -850,8 +861,53 @@ class Entrega {
      * vèrtex.
          */
         static int[] exercici3(int[][] g, int r) {
-            throw new UnsupportedOperationException("pendent");
+            boolean[] visitado = new boolean[g.length];
+            List<Integer> postorden = new ArrayList<>();
+        
+            // Usamos DFS y detectamos ciclos
+            if (tieneCiclo(g, r, -1, visitado)) {
+                return null;
+            }
+        
+            // Verificamos si es conexo (todos los nodos visitados)
+            for (boolean v : visitado) {
+                if (!v) return null;
+            }
+        
+            // Resetear para realizar el recorrido postorden real
+            Arrays.fill(visitado, false);
+            recorridoPostorden(g, r, visitado, postorden);
+            int[] resultado = new int[postorden.size()];
+            for (int i = 0; i < postorden.size(); i++) {
+                resultado[i] = postorden.get(i);
+            }
+            return resultado;
         }
+        
+        // DFS para detectar ciclos (usando `padre` para ignorar la arista de donde vinimos)
+        static boolean tieneCiclo(int[][] g, int actual, int padre, boolean[] visitado) {
+            visitado[actual] = true;
+            for (int vecino : g[actual]) {
+                if (!visitado[vecino]) {
+                    if (tieneCiclo(g, vecino, actual, visitado)) return true;
+                } else if (vecino != padre) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        // Recorrido postorden clásico (DFS)
+        static void recorridoPostorden(int[][] g, int actual, boolean[] visitado, List<Integer> resultado) {
+            visitado[actual] = true;
+            for (int vecino : g[actual]) {
+                if (!visitado[vecino]) {
+                    recorridoPostorden(g, vecino, visitado, resultado);
+                }
+            }
+            resultado.add(actual);
+        }
+        
 
         /*
      * Suposau que l'entrada és un mapa com el següent, donat com String per files (vegeu els tests)
@@ -878,8 +934,48 @@ class Entrega {
      * Si és impossible, retornau -1.
          */
         static int exercici4(char[][] mapa) {
-            throw new UnsupportedOperationException("pendent");
+            int filas = mapa.length;
+            int columnas = mapa[0].length;
+            boolean[][] visitado = new boolean[filas][columnas];
+        
+            int[] dr = {-1, 1, 0, 0}; // movimientos verticales
+            int[] dc = {0, 0, -1, 1}; // movimientos horizontales
+        
+            ArrayList<int[]> cola = new ArrayList<>();
+        
+            // Encontrar la posición de 'O' y añadirla a la "cola"
+            for (int i = 0; i < filas; i++) {
+                for (int j = 0; j < columnas; j++) {
+                    if (mapa[i][j] == 'O') {
+                        cola.add(new int[]{i, j, 0});
+                        visitado[i][j] = true;
+                        break;
+                    }
+                }
+            }
+        
+            int index = 0;
+            while (index < cola.size()) {
+                int[] actual = cola.get(index++);
+                int r = actual[0], c = actual[1], pasos = actual[2];
+        
+                if (mapa[r][c] == 'D') return pasos;
+        
+                for (int k = 0; k < 4; k++) {
+                    int nr = r + dr[k];
+                    int nc = c + dc[k];
+                    if (nr >= 0 && nr < filas && nc >= 0 && nc < columnas &&
+                        !visitado[nr][nc] && mapa[nr][nc] != '#') {
+        
+                        visitado[nr][nc] = true;
+                        cola.add(new int[]{nr, nc, pasos + 1});
+                    }
+                }
+            }
+        
+            return -1; // No se encontró camino
         }
+        
 
         /*
      * Aquí teniu alguns exemples i proves relacionades amb aquests exercicis (vegeu `main`)
