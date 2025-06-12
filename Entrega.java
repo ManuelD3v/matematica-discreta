@@ -1,4 +1,3 @@
-import java.lang.AssertionError;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -8,6 +7,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.IntStream;
+
 
 /*
  * Aquesta entrega consisteix en implementar tots els mètodes anomenats "exerciciX". Ara mateix la
@@ -178,7 +178,7 @@ class Entrega {
                     resultado = (!a || b);
                 case NAND ->
                     resultado = !(a && b);
-            };
+            }
             return resultado;
         }
 
@@ -356,130 +356,82 @@ class Entrega {
      * - null en qualsevol altre cas
          */
         static Integer exercici3(int[] a, int[][] rel, int[] x, boolean op) {
-            // TODO ejercicio 3 conjuntos
-            if (op) {
-                ArrayList<Integer> maximales = buscarMaximales(a, rel, x);
-                // El suprem de `x` si existeix i `op` és true
-                if (maximales.size() != 1) {
-                    return null;
-                } else {
-                    return maximales.get(0);
-                }
-            } else {
-                ArrayList<Integer> minimales = buscarMinimales(a, rel, x);
-                // L'ínfim de `x` si existeix i `op` és false
-                if (minimales.size() != 1) {
-                    return null;
-                } else {
-                    return minimales.get(0);
-                }
+            int n = a.length;
+            boolean[][] mat = new boolean[n][n];
+            for (int[] par : rel) {
+                int i = index(a, par[0]);
+                int j = index(a, par[1]);
+                mat[i][j] = true;
             }
 
-        }
+            List<Integer> cotas = new ArrayList<>();
 
-        static ArrayList<Integer> buscarMaximales(int[] a, int[][] rel, int[] x) {
-            ArrayList<ArrayList<Integer>> cotaSuperiorDeElementos = new ArrayList<>();
-            // buscamos las cotas superiores de cada elemento
-            for (int i = 0; i < x.length; i++) {
-                int elemento = x[i];
-                cotaSuperiorDeElementos.add(new ArrayList<>());
-                for (int[] par : rel) {
-                    if (elemento == par[0]) {
-                        cotaSuperiorDeElementos.get(i).add(par[1]);
-                    }
-                }
-            }
-            //miramos las cotas superiores de cada elemento y los ponemos en la cota superior del subconjunto
-            ArrayList<Integer> cotaSuperior = buscarComunes(cotaSuperiorDeElementos);
-
-            //depurar cota Inferior para sacar minimales
-            ArrayList<Integer> maximales = new ArrayList<>();
-
-            for (int num : cotaSuperior) {
-                for (int num2 : cotaSuperior) {
-                    if (num != num2) {
-                        int[] par = {num2, num};
-                        if (!contienePar(rel, par)) {
-                            maximales.add(num);
+            // Paso 1: encontrar todas las cotas (inferiores o superiores)
+            for (int i = 0; i < n; i++) {
+                boolean esCota = true;
+                for (int xi : x) {
+                    int idxX = index(a, xi);
+                    if (op) {
+                        // Buscando suprem: a[i] debe ser ≥ xi → xi ≤ a[i]
+                        if (!mat[idxX][i]) {
+                            esCota = false;
+                            break;
+                        }
+                    } else {
+                        // Buscando ínfim: a[i] ≤ xi
+                        if (!mat[i][idxX]) {
+                            esCota = false;
                             break;
                         }
                     }
                 }
-            }
-            if (maximales.isEmpty()) {
-                for (int element : cotaSuperior) {
-                    maximales.add(element);
-                }
-            }
-            return maximales;
-        }
+                if (esCota) {
+                    cotas.add(i); // Guardamos el índice
 
-        static ArrayList<Integer> buscarMinimales(int[] a, int[][] rel, int[] x) {
-
-            ArrayList<ArrayList<Integer>> cotaInferiorDeElementos = new ArrayList<>();
-            for (int i = 0; i < x.length; i++) {
-                int elemento = x[i];
-                cotaInferiorDeElementos.add(new ArrayList<>());
-                for (int[] par : rel) {
-                    if (elemento == par[1]) {
-                        cotaInferiorDeElementos.get(i).add(par[0]);
-                    }
                 }
             }
 
-            ArrayList<Integer> cotaInferior = buscarComunes(cotaInferiorDeElementos);
-            ArrayList<Integer> minimales = new ArrayList<>();
-
-            for (int num : cotaInferior) {
-                boolean esMinimal = true;
-                for (int num2 : cotaInferior) {
-                    if (num != num2) {
-                        int[] par = {num2, num}; // num2 ≤ num en la relación → num no es mínimo
-                        if (!contienePar(rel, par)) {
-                            esMinimal = false;
-                            break;
-                        }
-                    }
-                }
-                if (esMinimal) {
-                    minimales.add(num);
-                }
+            if (cotas.isEmpty()) {
+                return null;
             }
-            return minimales;
 
-        }
-
-        static boolean contienePar(int[][] rel, int[] par) {
-            for (int[] fila : rel) {
-                if (fila[0] == par[0] && fila[1] == par[1]) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        static ArrayList<Integer> buscarComunes(ArrayList<ArrayList<Integer>> minimalesProvisionales) {
-            ArrayList<Integer> comunes = new ArrayList<>();
-            for (int i = 0; i < minimalesProvisionales.size(); i++) {
-                for (int i2 = 0; i2 < minimalesProvisionales.get(i).size(); i2++) {
-                    for (int j = i + 1; j < minimalesProvisionales.size(); j++) {
-                        for (int j2 = 0; j2 < minimalesProvisionales.get(j).size(); j2++) {
-                            if ((int) minimalesProvisionales.get(i).get(i2) == (int) minimalesProvisionales.get(j).get(j2)) {
-                                boolean aparece = false;
-                                for (int num : comunes) {
-                                    if (num == (int) minimalesProvisionales.get(i).get(i2)) {
-                                        aparece = true;
-                                    }
-                                }
-                                if (!aparece) {
-                                    comunes.add(minimalesProvisionales.get(i).get(i2));
-                                }
+            // Paso 2: buscar el mínimo (suprem) o máximo (ínfim) entre las cotas, si es único
+            List<Integer> maximals = new ArrayList<>();
+            for (int i : cotas) {
+                boolean esMaximal = true;
+                for (int j : cotas) {
+                    if (i != j) {
+                        if (op) {
+                            // Suprem: buscamos el mínimo → i debe ser ≤ j
+                            if (!mat[i][j]) {
+                                esMaximal = false;
+                            }
+                        } else {
+                            // Ínfim: buscamos el máximo → i debe ser ≥ j
+                            if (!mat[j][i]) {
+                                esMaximal = false;
                             }
                         }
+                        if (!esMaximal) {
+                            break;
+                        }
                     }
                 }
+                if (esMaximal) {
+                    maximals.add(i);
+                }
             }
-            return comunes;
+
+            return (maximals.size() == 1) ? a[maximals.get(0)] : null;
+        }
+
+        static int index(int[] a, int val) {
+            for (int i = 0; i < a.length; i++) {
+                if (a[i] == val) {
+                    return i;
+                }
+            }
+            return -1;
         }
 
         /*
@@ -490,21 +442,33 @@ class Entrega {
      *  - Sinó, null.
          */
         static int[][] exercici4(int[] a, int[] b, Function<Integer, Integer> f) {
-            // TODO ejercicio 4 conjuntos
-            // Array auxiliar para guardar (y = f(x), x)
-            int[][] imagen = new int[a.length][2];
-
-            // Para verificar inyectividad
-            boolean esInyectiva = true;
+            // Paso 1: calcular imagen de a bajo f (pares (f(x), x))
+            int[][] pares = new int[a.length][2];
             for (int i = 0; i < a.length; i++) {
-                int x = a[i];
-                int fx = f.apply(x);
-                imagen[i][0] = fx;
-                imagen[i][1] = x;
+                pares[i][0] = f.apply(a[i]); // f(a[i])
+                pares[i][1] = a[i];
+            }
 
-                // Comparar con anteriores para detectar duplicados (no inyectiva)
+            // Paso 2: contar cuántos valores distintos hay en f(x)
+            int totalImagen = 0;
+            for (int i = 0; i < pares.length; i++) {
+                boolean repetido = false;
                 for (int j = 0; j < i; j++) {
-                    if (imagen[j][0] == fx) {
+                    if (pares[i][0] == pares[j][0]) {
+                        repetido = true;
+                        break;
+                    }
+                }
+                if (!repetido) {
+                    totalImagen++;
+                }
+            }
+
+            // Paso 3: verificar si f es biyectiva
+            boolean esInyectiva = true;
+            for (int i = 0; i < pares.length; i++) {
+                for (int j = i + 1; j < pares.length; j++) {
+                    if (pares[i][0] == pares[j][0]) {
                         esInyectiva = false;
                         break;
                     }
@@ -514,57 +478,75 @@ class Entrega {
                 }
             }
 
-            // Para verificar exhaustividad: cada b[j] debe estar como f(x) para algún x
-            boolean esExhaustiva = true;
+            boolean esSobreyectiva = true;
             for (int i = 0; i < b.length; i++) {
                 boolean encontrado = false;
-                for (int x : a) {
-                    if (f.apply(x) == b[i]) {
+                for (int j = 0; j < pares.length; j++) {
+                    if (pares[j][0] == b[i]) {
                         encontrado = true;
                         break;
                     }
                 }
                 if (!encontrado) {
-                    esExhaustiva = false;
+                    esSobreyectiva = false;
                     break;
                 }
             }
 
-            // Biyectiva → inversa completa
-            if (esInyectiva && esExhaustiva) {
-                int[][] inversa = new int[b.length][2];
-                for (int i = 0; i < a.length; i++) {
-                    inversa[i][0] = imagen[i][0];
-                    inversa[i][1] = imagen[i][1];
+            // Caso 1: Inversa total (f es biyectiva)
+            if (esInyectiva && esSobreyectiva) {
+                int[][] inversa = new int[pares.length][2];
+                for (int i = 0; i < pares.length; i++) {
+                    inversa[i][0] = pares[i][0]; // f(x)
+                    inversa[i][1] = pares[i][1]; // x
                 }
-                return Tema2.lexSorted(inversa);
+                return inversa;
             }
 
-            // Inyectiva → inversa por la izquierda
+            // Caso 2: Inversa por la izquierda (f inyectiva)
             if (esInyectiva) {
-                int[][] inversa = new int[a.length][2];
-                for (int i = 0; i < a.length; i++) {
-                    inversa[i][0] = imagen[i][0];
-                    inversa[i][1] = imagen[i][1];
-                }
-                return Tema2.lexSorted(inversa);
-            }
-
-            // Suprayectiva → inversa por la derecha
-            if (esExhaustiva) {
-                ArrayList<int[]> inversa = new ArrayList<>();
-                for (int y : b) {
-                    for (int x : a) {
-                        if (f.apply(x) == y) {
-                            inversa.add(new int[]{y, x});
+                // Tomamos solo los pares de la imagen
+                int[][] inversaIzquierda = new int[totalImagen][2];
+                int pos = 0;
+                for (int i = 0; i < pares.length; i++) {
+                    boolean repetido = false;
+                    for (int j = 0; j < i; j++) {
+                        if (pares[i][0] == pares[j][0]) {
+                            repetido = true;
                             break;
                         }
                     }
+                    if (!repetido) {
+                        inversaIzquierda[pos][0] = pares[i][0]; // f(x)
+                        inversaIzquierda[pos][1] = pares[i][1]; // x
+                        pos++;
+                    }
                 }
-                return Tema2.lexSorted(inversa.toArray(new int[0][]));
+                return inversaIzquierda;
             }
 
-            // No existe inversa
+            // Caso 3: Inversa por la derecha (f sobreyectiva)
+            if (esSobreyectiva) {
+                // Para cada y ∈ b, buscar un x ∈ a tal que f(x) == y
+                int[][] inversaDerecha = new int[b.length][2];
+                for (int i = 0; i < b.length; i++) {
+                    boolean encontrado = false;
+                    for (int j = 0; j < a.length; j++) {
+                        if (f.apply(a[j]) == b[i]) {
+                            inversaDerecha[i][0] = b[i]; // y
+                            inversaDerecha[i][1] = a[j]; // x tal que f(x) = y
+                            encontrado = true;
+                            break;
+                        }
+                    }
+                    if (!encontrado) {
+                        return null; // no debería pasar
+                    }
+                }
+                return inversaDerecha;
+            }
+
+            // Ningún tipo de inversa
             return null;
         }
 
@@ -774,7 +756,7 @@ class Entrega {
             Arrays.sort(grados2);
 
             for (int indice = 0; indice < grados1.length; indice++) {
-                if(grados1[indice]!=grados2[indice] ){
+                if (grados1[indice] != grados2[indice]) {
                     return false;
                 }
             }
@@ -863,17 +845,19 @@ class Entrega {
         static int[] exercici3(int[][] g, int r) {
             boolean[] visitado = new boolean[g.length];
             List<Integer> postorden = new ArrayList<>();
-        
+
             // Usamos DFS y detectamos ciclos
             if (tieneCiclo(g, r, -1, visitado)) {
                 return null;
             }
-        
-            // Verificamos si es conexo (todos los nodos visitados)
+
+            // Verificamos si es conexo
             for (boolean v : visitado) {
-                if (!v) return null;
+                if (!v) {
+                    return null;
+                }
             }
-        
+
             // Resetear para realizar el recorrido postorden real
             Arrays.fill(visitado, false);
             recorridoPostorden(g, r, visitado, postorden);
@@ -883,20 +867,22 @@ class Entrega {
             }
             return resultado;
         }
-        
+
         // DFS para detectar ciclos (usando `padre` para ignorar la arista de donde vinimos)
         static boolean tieneCiclo(int[][] g, int actual, int padre, boolean[] visitado) {
             visitado[actual] = true;
             for (int vecino : g[actual]) {
                 if (!visitado[vecino]) {
-                    if (tieneCiclo(g, vecino, actual, visitado)) return true;
+                    if (tieneCiclo(g, vecino, actual, visitado)) {
+                        return true;
+                    }
                 } else if (vecino != padre) {
                     return true;
                 }
             }
             return false;
         }
-        
+
         // Recorrido postorden clásico (DFS)
         static void recorridoPostorden(int[][] g, int actual, boolean[] visitado, List<Integer> resultado) {
             visitado[actual] = true;
@@ -907,7 +893,7 @@ class Entrega {
             }
             resultado.add(actual);
         }
-        
+
 
         /*
      * Suposau que l'entrada és un mapa com el següent, donat com String per files (vegeu els tests)
@@ -937,45 +923,60 @@ class Entrega {
             int filas = mapa.length;
             int columnas = mapa[0].length;
             boolean[][] visitado = new boolean[filas][columnas];
-        
-            int[] dr = {-1, 1, 0, 0}; // movimientos verticales
-            int[] dc = {0, 0, -1, 1}; // movimientos horizontales
-        
-            ArrayList<int[]> cola = new ArrayList<>();
-        
-            // Encontrar la posición de 'O' y añadirla a la "cola"
+
+            // Movimientos posibles: arriba, abajo, izquierda, derecha
+            int[] movFila = {-1, 1, 0, 0};
+            int[] movColumna = {0, 0, -1, 1};
+
+            // Lista para simular la cola del BFS
+            ArrayList<int[]> lista = new ArrayList<>();
+
+            // Encontrar la posición inicial 'O'
             for (int i = 0; i < filas; i++) {
                 for (int j = 0; j < columnas; j++) {
                     if (mapa[i][j] == 'O') {
-                        cola.add(new int[]{i, j, 0});
+                        lista.add(new int[]{i, j, 0});
                         visitado[i][j] = true;
                         break;
                     }
                 }
             }
-        
-            int index = 0;
-            while (index < cola.size()) {
-                int[] actual = cola.get(index++);
-                int r = actual[0], c = actual[1], pasos = actual[2];
-        
-                if (mapa[r][c] == 'D') return pasos;
-        
+
+            // Índice para simular el comportamiento de una cola
+            int indice = 0;
+
+            while (indice < lista.size()) {
+                int[] actual = lista.get(indice++);
+                int filaActual = actual[0];
+                int columnaActual = actual[1];
+                int pasos = actual[2];
+
+                // Si encontramos el destino
+                if (mapa[filaActual][columnaActual] == 'D') {
+                    return pasos;
+                }
+
+                // Explorar los 4 movimientos posibles
                 for (int k = 0; k < 4; k++) {
-                    int nr = r + dr[k];
-                    int nc = c + dc[k];
-                    if (nr >= 0 && nr < filas && nc >= 0 && nc < columnas &&
-                        !visitado[nr][nc] && mapa[nr][nc] != '#') {
-        
-                        visitado[nr][nc] = true;
-                        cola.add(new int[]{nr, nc, pasos + 1});
+                    int nuevaFila = filaActual + movFila[k];
+                    int nuevaColumna = columnaActual + movColumna[k];
+
+                    // Verificar que el movimiento es válido
+                    if (nuevaFila >= 0 && nuevaFila < filas
+                            && nuevaColumna >= 0 && nuevaColumna < columnas
+                            && !visitado[nuevaFila][nuevaColumna]
+                            && mapa[nuevaFila][nuevaColumna] != '#') {
+
+                        visitado[nuevaFila][nuevaColumna] = true;
+                        lista.add(new int[]{nuevaFila, nuevaColumna, pasos + 1});
                     }
                 }
             }
-        
-            return -1; // No se encontró camino
+
+            // No se encontró camino
+            return -1;
         }
-        
+
 
         /*
      * Aquí teniu alguns exemples i proves relacionades amb aquests exercicis (vegeu `main`)
@@ -1008,7 +1009,6 @@ class Entrega {
             // Isomorfisme de grafs
             test(3, 2, 1, () -> exercici2(T1, T2));
             test(3, 2, 2, () -> !exercici2(T1, C3));
-            
 
             // Exercici 3
             // Postordre
@@ -1045,9 +1045,200 @@ class Entrega {
    * Si implementau algun dels exercicis així, tendreu un 0 d'aquell exercici.
      */
     static class Tema4 {
-        // Els penjarem més envant
 
+        /*
+     * Primer, codificau el missatge en blocs de longitud 2 amb codificació ASCII. Després encriptau
+     * el missatge utilitzant xifrat RSA amb la clau pública donada.
+     *
+     * Per obtenir els codis ASCII del String podeu utilitzar `msg.getBytes()`.
+     *
+     * Podeu suposar que:
+     * - La longitud de `msg` és múltiple de 2
+     * - El valor de tots els caràcters de `msg` està entre 32 i 127.
+     * - La clau pública (n, e) és de la forma vista a les transparències.
+     * - n és major que 2¹⁴, i n² és menor que Integer.MAX_VALUE
+     *
+     * Pista: https://en.wikipedia.org/wiki/Exponentiation_by_squaring
+         */
+        static int[] exercici1(String msg, int n, int e) {
+            int[] encriptado = new int[msg.length() / 2];
+
+            codificarAscii(msg, encriptado);
+
+            encriptar(encriptado, e, n);
+
+            return encriptado;
+        }
+
+        public static void codificarAscii(String msg, int[] encriptado) {
+            int indice = 0;
+            for (int i = 0; i < encriptado.length; i++) {
+                encriptado[i] += ((int) msg.charAt(indice) * 128);
+                indice++;
+                encriptado[i] += (int) msg.charAt(indice);
+                indice++;
+            }
+        }
+
+        public static void encriptar(int[] encriptado, int e, int n) {
+
+            for (int i = 0; i < encriptado.length; i++) {
+                encriptado[i] = modPow(encriptado[i], e, n);
+            }
+
+        }
+
+        public static int modPow(int base, int exp, int mod) {
+            int result = 1;
+            int b = base % mod;
+            while (exp > 0) {
+                if ((exp & 1) == 1) {
+                    result = (result * b) % mod;
+                }
+                b = (b * b) % mod;
+                exp >>>= 1;
+            }
+            return result;
+        }
+
+
+        /*
+     * Primer, desencriptau el missatge utilitzant xifrat RSA amb la clau pública donada. Després
+     * descodificau el missatge en blocs de longitud 2 amb codificació ASCII (igual que l'exercici
+     * anterior, però al revés).
+     *
+     * Per construir un String a partir d'un array de bytes podeu fer servir el constructor
+     * `new String(byte[])`. Si heu de factoritzar algun nombre, ho podeu fer per força bruta.
+     *
+     * També podeu suposar que:
+     * - La longitud del missatge original és múltiple de 2
+     * - El valor de tots els caràcters originals estava entre 32 i 127.
+     * - La clau pública (n, e) és de la forma vista a les transparències.
+     * - n és major que 2¹⁴, i n² és menor que Integer.MAX_VALUE
+         */
+        static String exercici2(int[] m, int n, int e) {
+            int[] primos= factorizar(n);
+            
+            int phi = calcularPhi(primos);
+
+            int clavePrivada = descifrarClavePrivada(phi,e);
+
+            int desencriptado[] = descifrarMensaje(m,clavePrivada,n);
+
+            char [] mensaje = reconstruccion(desencriptado);
+
+            return new String(mensaje);
+        }
+
+        static int[] factorizar(int n) {
+            int primos[] = new int [2];
+
+            for(int i = 2; i*i < n; i++){
+                if(n%i == 0){
+                    primos[0] = i;
+                    primos[1] = n/i;
+                }
+            }
+            return primos;
+        }
+
+        static int calcularPhi(int [] primos){
+
+            return (primos[0]-1)*(primos[1]-1);
+        }
+
+        static int descifrarClavePrivada(int phi, int e){
+            
+            for (int clavePrivada = 1; clavePrivada < phi; clavePrivada++) {
+                if ((long) clavePrivada * e % phi == 1) {
+                    return clavePrivada;
+                }
+            }
+            return 0;
+        }
+
+        static int[] descifrarMensaje(int[] m, int clavePrivada, int n){
+
+            int [] resultado = new int[m.length];
+
+            int indice = 0;
+            for(int i : m){
+
+                resultado [indice] = modPow(i, clavePrivada, n);
+                indice++;
+            }
+
+            return resultado;
+        }
+
+        static char[] reconstruccion(int[] mensaje){
+            char [] resultado = new char[mensaje.length*2];
+
+            for(int indice = 0; indice < mensaje.length; indice++){
+                resultado[2*indice] = (char) (mensaje[indice]/128);
+                resultado[2*indice + 1] = (char) (mensaje[indice]%128);
+            }
+
+            return resultado;
+        }
         static void tests() {
+            // Exercici 1
+            // Codificar i encriptar
+            test(4, 1, 1, () -> {
+                var n = 2 * 8209;
+                var e = 5;
+
+                var encr = exercici1("Patata", n, e);
+                return Arrays.equals(encr, new int[]{4907, 4785, 4785});
+            });
+            // Test 5: mensaje mínimo (2 caracteres)
+            test(4, 1, 2, () -> {
+                int n = 20011;       //  > 2^14, y n^2 < Integer.MAX_VALUE
+                int e = 3;
+                int[] encr = exercici1("AB", n, e);
+                // bloque = 65*128 + 66 = 8386, luego 8386^3 mod 20011 = 14785
+                return Arrays.equals(encr, new int[]{14785});
+            });
+
+            // Test 6: mensaje de 6 caracteres
+            test(4, 1, 3, () -> {
+                int n = 25013;
+                int e = 7;
+                int[] encr = exercici1("Test12", n, e);
+                // bloques = [ 'T','e' ; 's','t' ; '1','2' ] 
+                //         = [ 84*128+101=10933, 115*128+116=14756, 49*128+50=6292 ]
+                // encriptados mod 25013 con exp=7 = [1298, 9290, 12806]
+                return Arrays.equals(encr, new int[]{1298, 9290, 12806});
+            });
+
+            // Test 7: mensaje de 8 caracteres con símbolo
+            test(4, 1, 4, () -> {
+                int n = 30011;
+                int e = 17;
+                int[] encr = exercici1("ChatGPT!", n, e);
+                // bloques: "Ch","at","GP","T!" → [20059, 5654, 10584, 10947]
+                return Arrays.equals(encr, new int[]{20059, 5654, 10584, 10947});
+            });
+
+            // Test 8: mensaje de 10 caracteres
+            test(4, 1, 5, () -> {
+                int n = 32771;
+                int e = 11;
+                int[] encr = exercici1("RSAEncrypt", n, e);
+                // bloques: "RS","AE","nc","ry","pt" → [17881, 18530, 16021, 1463, 31450]
+                return Arrays.equals(encr, new int[]{17881, 18530, 16021, 1463, 31450});
+            });
+
+            // Exercici 2
+            // Desencriptar i decodificar
+            test(4, 2, 1, () -> {
+                var n = 2 * 8209;
+                var e = 5;
+
+                var encr = new int[]{4907, 4785, 4785};
+                var decr = exercici2(encr, n, e);
+                return "Patata".equals(decr);
+            });
         }
     }
 
