@@ -445,8 +445,8 @@ class Entrega {
             // Paso 1: calcular imagen de a bajo f (pares (f(x), x))
             int[][] pares = new int[a.length][2];
             for (int i = 0; i < a.length; i++) {
-                pares[i][0] = f.apply(a[i]); // f(a[i])
-                pares[i][1] = a[i];
+                pares[i][1] = f.apply(a[i]); // f(a[i])
+                pares[i][0] = a[i];
             }
 
             // Paso 2: contar cuántos valores distintos hay en f(x)
@@ -454,7 +454,7 @@ class Entrega {
             for (int i = 0; i < pares.length; i++) {
                 boolean repetido = false;
                 for (int j = 0; j < i; j++) {
-                    if (pares[i][0] == pares[j][0]) {
+                    if (pares[i][1] == pares[j][1]) {
                         repetido = true;
                         break;
                     }
@@ -468,7 +468,7 @@ class Entrega {
             boolean esInyectiva = true;
             for (int i = 0; i < pares.length; i++) {
                 for (int j = i + 1; j < pares.length; j++) {
-                    if (pares[i][0] == pares[j][0]) {
+                    if (pares[i][1] == pares[j][1]) {
                         esInyectiva = false;
                         break;
                     }
@@ -482,7 +482,7 @@ class Entrega {
             for (int i = 0; i < b.length; i++) {
                 boolean encontrado = false;
                 for (int j = 0; j < pares.length; j++) {
-                    if (pares[j][0] == b[i]) {
+                    if (pares[j][1] == b[i]) {
                         encontrado = true;
                         break;
                     }
@@ -497,8 +497,8 @@ class Entrega {
             if (esInyectiva && esSobreyectiva) {
                 int[][] inversa = new int[pares.length][2];
                 for (int i = 0; i < pares.length; i++) {
-                    inversa[i][0] = pares[i][0]; // f(x)
-                    inversa[i][1] = pares[i][1]; // x
+                    inversa[i][0] = pares[i][1]; // f(x)
+                    inversa[i][1] = pares[i][0]; // x
                 }
                 return inversa;
             }
@@ -511,14 +511,14 @@ class Entrega {
                 for (int i = 0; i < pares.length; i++) {
                     boolean repetido = false;
                     for (int j = 0; j < i; j++) {
-                        if (pares[i][0] == pares[j][0]) {
+                        if (pares[i][1] == pares[j][1]) {
                             repetido = true;
                             break;
                         }
                     }
                     if (!repetido) {
-                        inversaIzquierda[pos][0] = pares[i][0]; // f(x)
-                        inversaIzquierda[pos][1] = pares[i][1]; // x
+                        inversaIzquierda[pos][0] = pares[i][1]; // f(x)
+                        inversaIzquierda[pos][1] = pares[i][0]; // x
                         pos++;
                     }
                 }
