@@ -7,6 +7,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.IntStream;
+import javax.sound.sampled.SourceDataLine;
 
 
 /*
@@ -442,6 +443,7 @@ class Entrega {
      *  - Sinó, null.
          */
         static int[][] exercici4(int[] a, int[] b, Function<Integer, Integer> f) {
+           
             // Paso 1: calcular imagen de a bajo f (pares (f(x), x))
             int[][] pares = new int[a.length][2];
             for (int i = 0; i < a.length; i++) {
@@ -497,8 +499,8 @@ class Entrega {
             if (esInyectiva && esSobreyectiva) {
                 int[][] inversa = new int[pares.length][2];
                 for (int i = 0; i < pares.length; i++) {
-                    inversa[i][0] = pares[i][1]; // f(x)
-                    inversa[i][1] = pares[i][0]; // x
+                    inversa[i][1] = pares[i][1]; // f(x)
+                    inversa[i][0] = pares[i][0]; // x
                 }
                 return inversa;
             }
@@ -506,7 +508,12 @@ class Entrega {
             // Caso 2: Inversa por la izquierda (f inyectiva)
             if (esInyectiva) {
                 // Tomamos solo los pares de la imagen
-                int[][] inversaIzquierda = new int[totalImagen][2];
+                int[][] inversaIzquierda = new int[b.length][2];
+                int posicion = 0;
+                for (int i : b) {
+                    inversaIzquierda[posicion][0] = i;
+                    posicion++;
+                }
                 int pos = 0;
                 for (int i = 0; i < pares.length; i++) {
                     boolean repetido = false;
@@ -521,6 +528,14 @@ class Entrega {
                         inversaIzquierda[pos][1] = pares[i][0]; // x
                         pos++;
                     }
+                }
+                System.out.println("funcion");
+                for (int [] elem : pares) {
+                    System.out.println(Arrays.toString(elem));
+                }
+                System.out.println("inversa izquierda");
+                for (int [] elem : inversaIzquierda) {
+                    System.out.println(Arrays.toString(elem));
                 }
                 return inversaIzquierda;
             }
