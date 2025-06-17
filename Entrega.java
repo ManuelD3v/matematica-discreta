@@ -7,7 +7,6 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.IntStream;
-import javax.sound.sampled.SourceDataLine;
 
 
 /*
@@ -528,14 +527,6 @@ class Entrega {
                         inversaIzquierda[pos][1] = pares[i][0]; // x
                         pos++;
                     }
-                }
-                System.out.println("funcion");
-                for (int [] elem : pares) {
-                    System.out.println(Arrays.toString(elem));
-                }
-                System.out.println("inversa izquierda");
-                for (int [] elem : inversaIzquierda) {
-                    System.out.println(Arrays.toString(elem));
                 }
                 return inversaIzquierda;
             }
